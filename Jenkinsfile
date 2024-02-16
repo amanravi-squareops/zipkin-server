@@ -53,19 +53,19 @@ pipeline {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'github-cre', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                        // Navigate to the correct directory
-                        dir('zipkin-server') {
-                            // Update image tag in values.yaml
-                            sh """
-                            sed -i "s/tag: .*/tag: ${BUILD_NUMBER}/" values.yaml
-                            cat values.yaml
-                            git config --global user.email "aman.ravi@squareops.com"
-                            git config --global user.name "amanravi-squareops"
-                            git add values.yaml
-                            git commit -m "Update imageTag in values.yaml"
-                            git push origin main
-                            """
-                        }
+                    git branch: 'main', 
+                        url: "https://${USERNAME}:${PASSWORD}@github.com/amanravi-squareops/springboot-helm.git"
+                    }
+                      sh '''
+                    cd zipkin-server
+                    sed -i "s/tag: .*/tag: ${BUILD_NUMBER}/" values.yaml
+                    cat values.yaml
+                    git config --global user.email "aman.ravi@squareops.com"
+                    git config --global user.name "amanravi-squareops"
+                    git add values.yaml
+                    git commit -m "Update imageTag in values.yaml"
+                    git push origin main
+                    '''  
                     }
                 }
             }
