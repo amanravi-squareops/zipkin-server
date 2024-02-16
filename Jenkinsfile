@@ -39,7 +39,7 @@ stage('kaniko build & push') {
                 container('kaniko') {
                     script {
                         sh '''
-                        a=$(date "+%b-%d-time-%H:%M" | cut -c 1-16)
+                        a=$(date "+%b-%d-time-%H-%M" | cut -c 1-16)
                         /kaniko/executor --dockerfile /Dockerfile \
                         --context=$(pwd) \
                         --destination=amanravi12/zipkin-server:"${BUILD_NUMBER}-${a}"
