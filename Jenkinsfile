@@ -35,25 +35,19 @@ pipeline {
             }
         }
 stage('kaniko build & push') {
-    steps {
-        container('kaniko') {
-            script {
-                def a = sh(
-                    script: 'date "+%b-%d-time-%H:%M" | cut -c 1-16',
-                    returnStdout: true
-                ).trim()
-                
-                def imageTag = "${a}-${BUILD_NUMBER}"
-                
-                sh '''
-                /kaniko/executor --dockerfile /Dockerfile \
-                --context=$(pwd) \
-                --destination=amanravi12/zipkin-server:${imageTag}
-                '''
+            steps {
+                container('kaniko') {
+                    script {
+                        sh '''
+                        a=$(date "+%b-%d-time-%H:%M" | cut -c 1-16)
+                        /kaniko/executor --dockerfile /Dockerfile \
+                        --context=$(pwd) \
+                        --destination=amanravi12/zipkin-server:"${BUILD_NUMBER}-${a}"
+                        '''
+                    }
+                }
             }
         }
-    }
-}
 
         stage('Update values.yaml') {
             steps {
