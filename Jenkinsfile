@@ -1,29 +1,5 @@
 pipeline {
-    agent {
-        kubernetes {
-            yaml """
-            apiVersion: v1
-            kind: Pod
-            metadata:
-                name: kaniko
-            spec:
-                restartPolicy: Never
-                volumes:
-                - name: kaniko-secret
-                  secret:
-                    secretName: kaniko-secret
-                containers:
-                - name: kaniko
-                  image: gcr.io/kaniko-project/executor:debug
-                  command:
-                    - /busybox/cat
-                  tty: true
-                  volumeMounts:
-                  - name: kaniko-secret
-                    mountPath: /kaniko/.docker
-            """
-        }
-    }
+    agent any
 
     stages {
         stage('Cloning the repo') {
@@ -36,6 +12,31 @@ pipeline {
         }
         
         stage('kaniko build & push') {
+            agent {
+                kubernetes {
+                    yaml """
+                    apiVersion: v1
+                    kind: Pod
+                    metadata:
+                        name: kaniko
+                    spec:
+                        restartPolicy: Never
+                        volumes:
+                        - name: kaniko-secret
+                          secret:
+                            secretName: kaniko-secret
+                        containers:
+                        - name: kaniko
+                          image: gcr.io/kaniko-project/executor:debug
+                          command:
+                            - /busybox/cat
+                          tty: true
+                          volumeMounts:
+                          - name: kaniko-secret
+                            mountPath: /kaniko/.docker
+                    """
+                }
+            }
             steps {
                 container('kaniko') {
                     script {
@@ -53,10 +54,10 @@ pipeline {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'github-cre', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                    git branch: 'main', 
+                        git branch: 'main', 
                         url: "https://${USERNAME}:${PASSWORD}@github.com/amanravi-squareops/springboot-helm.git"
                     }
-                      sh '''
+                    sh '''
                     cd zipkin-server
                     sed -i "s/tag: .*/tag: ${BUILD_NUMBER}/" values.yaml
                     cat values.yaml
@@ -66,7 +67,6 @@ pipeline {
                     git commit -m "Update imageTag in values.yaml"
                     git push origin main
                     '''  
-                    }
                 }
             }
         }
