@@ -26,6 +26,17 @@ pipeline {
     }
 
     stages {
+        stage('Set Environment Variable') {
+            steps {
+                script {
+                    // Run the command to set the environment variable 'a'
+                    def a = sh(returnStdout: true, script: 'date "+%b-%d-time-%H-%M" | cut -c 1-16').trim()
+                    // Set 'a' as an environment variable
+                    env.a = a
+                }
+            }
+        }
+
         stage('Cloning the repo') {
             steps {
                 script {
@@ -39,11 +50,10 @@ pipeline {
             steps {
                 container('kaniko') {
                     script {
-                        def timestamp = sh(script: 'date "+%b-%d-time-%H-%M"', returnStdout: true).trim()
                         sh '''
                         /kaniko/executor --dockerfile /Dockerfile \
                         --context=$(pwd) \
-                        --destination=amanravi12/zipkin-server:"build-${BUILD_NUMBER}-${timestamp}"
+                        --destination=amanravi12/zipkin-server:"build-${BUILD_NUMBER}-${env.a}"
                         '''
                     }
                 }
@@ -54,19 +64,20 @@ pipeline {
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'github-cre', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                        git branch: 'main', 
-                            url: "https://${USERNAME}:${PASSWORD}@github.com/amanravi-squareops/springboot-helm.git"
+                        // Navigate to the correct directory
+                        dir('zipkin-server') {
+                            // Update image tag in values.yaml
+                            sh '''
+                            sed -i "s/tag: .*/tag: build-${BUILD_NUMBER}-${env.a}/" values.yaml
+                            cat values.yaml
+                            git config --global user.email "aman.ravi@squareops.com"
+                            git config --global user.name "amanravi-squareops"
+                            git add values.yaml
+                            git commit -m "Update imageTag in values.yaml"
+                            git push origin main
+                            '''
+                        }
                     }
-                    sh '''
-                    cd zipkin-server
-                    sed -i "s/tag: .*/tag: $build-{BUILD_NUMBER}-{timestamp}/" values.yaml
-                    cat values.yaml
-                    git config --global user.email "aman.ravi@squareops.com"
-                    git config --global user.name "amanravi-squareops"
-                    git add values.yaml
-                    git commit -m "Update imageTag in values.yaml"
-                    git push origin main
-                    '''
                 }
             }
         }
