@@ -25,6 +25,7 @@ pipeline {
         }
     }
 
+    stages {
         stage('Cloning the repo') {
             steps {
                 script {
@@ -38,11 +39,11 @@ pipeline {
             steps {
                 container('kaniko') {
                     script {
-                        sh '''
+                        sh """
                         /kaniko/executor --dockerfile /Dockerfile \
-                        --context=$(pwd) \
-                        --destination=amanravi12/zipkin-server:"${BUILD_NUMBER}"
-                        '''
+                        --context=\$(pwd) \
+                        --destination=amanravi12/zipkin-server:${BUILD_NUMBER}
+                        """
                     }
                 }
             }
@@ -55,15 +56,15 @@ pipeline {
                         // Navigate to the correct directory
                         dir('zipkin-server') {
                             // Update image tag in values.yaml
-                            sh '''
-                            sed -i "s/tag: .*/tag: ${BUILD_NUMBER}" values.yaml
+                            sh """
+                            sed -i "s/tag: .*/tag: ${BUILD_NUMBER}/" values.yaml
                             cat values.yaml
                             git config --global user.email "aman.ravi@squareops.com"
                             git config --global user.name "amanravi-squareops"
                             git add values.yaml
                             git commit -m "Update imageTag in values.yaml"
                             git push origin main
-                            '''
+                            """
                         }
                     }
                 }
