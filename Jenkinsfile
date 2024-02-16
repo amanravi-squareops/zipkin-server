@@ -25,18 +25,6 @@ pipeline {
         }
     }
 
-    stages {
-        stage('Set Environment Variable') {
-            steps {
-                script {
-                    // Run the command to set the environment variable 'a'
-                    def a = sh(returnStdout: true, script: 'date "+%b-%d-time-%H-%M" | cut -c 1-16').trim()
-                    // Set 'a' as an environment variable
-                    env.a = a
-                }
-            }
-        }
-
         stage('Cloning the repo') {
             steps {
                 script {
@@ -53,7 +41,7 @@ pipeline {
                         sh '''
                         /kaniko/executor --dockerfile /Dockerfile \
                         --context=$(pwd) \
-                        --destination=amanravi12/zipkin-server:"build-${BUILD_NUMBER}-${env.a}"
+                        --destination=amanravi12/zipkin-server:"${BUILD_NUMBER}"
                         '''
                     }
                 }
@@ -68,7 +56,7 @@ pipeline {
                         dir('zipkin-server') {
                             // Update image tag in values.yaml
                             sh '''
-                            sed -i "s/tag: .*/tag: build-${BUILD_NUMBER}-${env.a}/" values.yaml
+                            sed -i "s/tag: .*/tag: ${BUILD_NUMBER}" values.yaml
                             cat values.yaml
                             git config --global user.email "aman.ravi@squareops.com"
                             git config --global user.name "amanravi-squareops"
