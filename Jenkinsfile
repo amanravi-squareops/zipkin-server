@@ -1,6 +1,11 @@
 pipeline {
     agent any
 
+    environment {
+        // Define timestamp variable at the top-level environment block
+        TIMESTAMP = sh(script: "date +'%b-%d-t-%H-%M'", returnStdout: true).trim()
+    }
+
     stages {
         stage('Cloning the repo') {
             steps {
@@ -40,13 +45,12 @@ pipeline {
             steps {
                 container('kaniko') {
                     script {
-                        def timestamp = sh(script: "date +'%b-%d-t-%H-%M'", returnStdout: true).trim()
+                        // Use TIMESTAMP variable instead of defining a new one
                         sh """
                         /kaniko/executor --dockerfile /Dockerfile \
                         --context=\$(pwd) \
-                        --destination=amanravi12/zipkin-server:${timestamp}
+                        --destination=amanravi12/zipkin-server:${TIMESTAMP}
                         """
-                        env.IMAGE_TAG = timestamp
                     }
                 }
             }
@@ -61,7 +65,7 @@ pipeline {
                     }
                     sh '''
                     cd zipkin-server
-                    sed -i "s/tag: .*/tag: ${timestamp}/" values.yaml
+                    sed -i "s/tag: .*/tag: ${TIMESTAMP}/" values.yaml
                     cat values.yaml
                     git config --global user.email "aman.ravi@squareops.com"
                     git config --global user.name "amanravi-squareops"
