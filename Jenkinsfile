@@ -49,7 +49,7 @@ pipeline {
                         sh """
                         /kaniko/executor --dockerfile /Dockerfile \
                         --context=\$(pwd) \
-                        --destination=amanravi12/zipkin-server:${TIMESTAMP}
+                        --destination=amanravi12/zipkin-server:"build-${BUILD_NUMBER}-{TIMESTAMP}"
                         """
                     }
                 }
@@ -65,7 +65,7 @@ pipeline {
                     }
                     sh '''
                     cd zipkin-server
-                    sed -i "s/tag: .*/tag: ${TIMESTAMP}/" values.yaml
+                    sed -i "s/tag: .*/tag: build-${BUILD_NUMBER}-${TIMESTAMP}/" values.yaml
                     cat values.yaml
                     git config --global user.email "aman.ravi@squareops.com"
                     git config --global user.name "amanravi-squareops"
