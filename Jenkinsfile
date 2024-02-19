@@ -40,11 +40,13 @@ pipeline {
             steps {
                 container('kaniko') {
                     script {
+                        def timestamp = sh(script: "date +'%b-%d-t-%H-%M'", returnStdout: true).trim()
                         sh """
                         /kaniko/executor --dockerfile /Dockerfile \
                         --context=\$(pwd) \
-                        --destination=amanravi12/zipkin-server:${BUILD_NUMBER}
+                        --destination=amanravi12/zipkin-server:${timestamp}
                         """
+                        env.IMAGE_TAG = timestamp
                     }
                 }
             }
@@ -59,7 +61,7 @@ pipeline {
                     }
                     sh '''
                     cd zipkin-server
-                    sed -i "s/tag: .*/tag: ${BUILD_NUMBER}/" values.yaml
+                    sed -i "s/tag: .*/tag: ${timestamp}/" values.yaml
                     cat values.yaml
                     git config --global user.email "aman.ravi@squareops.com"
                     git config --global user.name "amanravi-squareops"
