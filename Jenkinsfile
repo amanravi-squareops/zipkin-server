@@ -38,14 +38,15 @@ pipeline {
                 }
             }
             steps {
-                container('kaniko') {
-                    script {
-                        sh """
-                        /kaniko/executor --dockerfile /Dockerfile \
-                        --context=\$(pwd) \
-                        --destination=amanravi12/zipkin-server:${BUILD_NUMBER}
-                        """
-                    }
+                script {
+                    def timestamp = sh(script: "date +'%b-%d-t-%H-%M'", returnStdout: true).trim()
+                    sh """
+                    /kaniko/executor --dockerfile /Dockerfile \
+                    --context=\$(pwd) \
+                    --destination=amanravi12/zipkin-server:${timestamp}
+                    """
+                    // Storing timestamp for later use
+                    env.IMAGE_TAG = timestamp
                 }
             }
         }
@@ -57,16 +58,18 @@ pipeline {
                         git branch: 'main', 
                         url: "https://${USERNAME}:${PASSWORD}@github.com/amanravi-squareops/springboot-helm.git"
                     }
-                    sh '''
+                    // Retrieving stored timestamp
+                    def timestamp = env.IMAGE_TAG
+                    sh """
                     cd zipkin-server
-                    sed -i "s/tag: .*/tag: ${BUILD_NUMBER}/" values.yaml
+                    sed -i "s/tag: .*/tag: ${timestamp}/" values.yaml
                     cat values.yaml
                     git config --global user.email "aman.ravi@squareops.com"
                     git config --global user.name "amanravi-squareops"
                     git add values.yaml
                     git commit -m "Update imageTag in values.yaml"
                     git push origin main
-                    '''  
+                    """  
                 }
             }
         }
