@@ -39,14 +39,12 @@ pipeline {
             }
             steps {
                 script {
-                    def timestamp = sh(script: "date +'%b-%d-t-%H-%M'", returnStdout: true).trim()
                     sh """
                     /kaniko/executor --dockerfile /Dockerfile \
                     --context=\$(pwd) \
-                    --destination=amanravi12/zipkin-server:${timestamp}
+                    --destination=amanravi12/zipkin-server:${BUILD_ID}
                     """
                     // Storing timestamp for later use
-                    env.IMAGE_TAG = timestamp
                 }
             }
         }
@@ -59,10 +57,10 @@ pipeline {
                         url: "https://${USERNAME}:${PASSWORD}@github.com/amanravi-squareops/springboot-helm.git"
                     }
                     // Retrieving stored timestamp
-                    def timestamp = env.IMAGE_TAG
+                   // def timestamp = env.IMAGE_TAG
                     sh """
                     cd zipkin-server
-                    sed -i "s/tag: .*/tag: ${timestamp}/" values.yaml
+                    sed -i "s/tag: .*/tag: ${BUILD_ID}/" values.yaml
                     cat values.yaml
                     git config --global user.email "aman.ravi@squareops.com"
                     git config --global user.name "amanravi-squareops"
