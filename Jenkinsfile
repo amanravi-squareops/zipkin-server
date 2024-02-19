@@ -49,7 +49,7 @@ pipeline {
                         sh """
                         /kaniko/executor --dockerfile /Dockerfile \
                         --context=\$(pwd) \
-                        --destination=amanravi12/zipkin-server:"build-${BUILD_NUMBER}-{TIMESTAMP}"
+                        --destination=amanravi12/zipkin-server:build-${BUILD_NUMBER}-{TIMESTAMP}
                         """
                     }
                 }
